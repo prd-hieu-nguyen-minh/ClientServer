@@ -1,13 +1,14 @@
 package com.hieuminh.clientserverdemo
 
 import android.os.Bundle
+import android.text.method.ScrollingMovementMethod
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
-import com.hieuminh.clientserverdemo.ConnectStatus.Companion.connectType
 import com.hieuminh.clientserverdemo.connections.Client
 import io.github.g00fy2.quickie.QRResult
 import io.github.g00fy2.quickie.ScanQRCode
@@ -22,6 +23,7 @@ class ClientActivity : AppCompatActivity() {
     private lateinit var etPort: EditText
     private lateinit var tvMessage: TextView
     private lateinit var btManualConnectToServer: Button
+    private lateinit var btScanQRCode: Button
 
     private lateinit var connectStatus: ConnectStatus
 
@@ -37,22 +39,25 @@ class ClientActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_client)
         client = Client()
+        client.setReceiveListener(::addLogMessage)
         etAddress = findViewById(R.id.etAddress)
         etPort = findViewById(R.id.etPort)
         tvMessage = findViewById(R.id.tvMessage)
         btManualConnectToServer = findViewById(R.id.btManualConnectToServer)
+        btScanQRCode = findViewById(R.id.btScanQRCode)
+        tvMessage.movementMethod = ScrollingMovementMethod()
 
         updateStatus(ConnectStatus.BEGIN)
     }
 
     private fun addLogMessage(message: Any?) {
-        tvMessage.text = "${message}\n${tvMessage.text}"
+        tvMessage.text = "${message}\n\n${tvMessage.text}".trim()
     }
 
     private fun updateStatus(connectStatus: ConnectStatus, errorMessage: String? = null) {
         this.connectStatus = connectStatus
-        btManualConnectToServer.text =
-            if (connectStatus in ConnectStatus.connectType) "Stop connect" else "Manual connect to server"
+        btManualConnectToServer.text = if (connectStatus in ConnectStatus.connectType) "Stop connect" else "Manual connect to server"
+        btScanQRCode.isVisible = connectStatus !in ConnectStatus.connectType
         val message = when (connectStatus) {
             ConnectStatus.BEGIN -> "Waiting a connection"
             ConnectStatus.WAIT -> "Connecting to server..."
@@ -71,6 +76,7 @@ class ClientActivity : AppCompatActivity() {
             withContext(Dispatchers.Main) {
                 if (msg == null) {
                     updateStatus(ConnectStatus.SUCCESS)
+                    client.setupReceive(tvMessage)
                 } else {
                     updateStatus(ConnectStatus.FAILURE, msg)
                 }
@@ -80,12 +86,12 @@ class ClientActivity : AppCompatActivity() {
 
     fun manualConnectToServer(view: View) {
         if (connectStatus in ConnectStatus.connectType) {
-                client.stop()
-                startServerJob?.cancel()
-                startServerJob = null
-                updateStatus(ConnectStatus.CANCEL)
-                return
-            }
+            client.stop()
+            startServerJob?.cancel()
+            startServerJob = null
+            updateStatus(ConnectStatus.CANCEL)
+            return
+        }
         val address = etAddress.text.toString()
         val port = etPort.text.toString().toInt()
         connectToServer(address, port)
@@ -107,4 +113,8 @@ enum class ConnectStatus {
     companion object {
         val connectType = listOf(WAIT, SUCCESS)
     }
+}
+
+fun TextView.appendLogText(message: Any?) {
+    text = "$message\n\n$text".trim()
 }
