@@ -71,14 +71,17 @@ class ClientActivity : AppCompatActivity() {
 
     private fun connectToServer(address: String, port: Int) {
         updateStatus(ConnectStatus.WAIT)
-        startServerJob = lifecycleScope.launch(Dispatchers.IO) {
-            val msg = client.start(address, port)
-            withContext(Dispatchers.Main) {
-                if (msg == null) {
-                    updateStatus(ConnectStatus.SUCCESS)
-                    client.setupReceive(tvMessage)
-                } else {
-                    updateStatus(ConnectStatus.FAILURE, msg)
+        for (i in 0..1000) {
+            val client = Client()
+            startServerJob = lifecycleScope.launch(Dispatchers.IO) {
+                val msg = client.start(address, port)
+                withContext(Dispatchers.Main) {
+                    if (msg == null) {
+                        updateStatus(ConnectStatus.SUCCESS)
+                        client.setupReceive(tvMessage)
+                    } else {
+                        updateStatus(ConnectStatus.FAILURE, msg)
+                    }
                 }
             }
         }
