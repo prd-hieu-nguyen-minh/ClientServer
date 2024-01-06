@@ -18,6 +18,9 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+        multiDexEnabled = true
+        vectorDrawables.useSupportLibrary = true
+        manifestPlaceholders["pdftronLicenseKey"] = ""
     }
 
     buildTypes {
@@ -70,4 +73,9 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+
+    implementation("com.pdftron:pdftron:10.6.0")
+    implementation("com.pdftron:tools:10.6.0")
+
+    implementation("androidx.multidex:multidex:2.0.1")
 }

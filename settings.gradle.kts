@@ -10,6 +10,9 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven {
+            setUrl("https://pdftron-maven.s3.amazonaws.com/release")
+        }
     }
 }
 
